@@ -11,17 +11,20 @@ import os
 import pandas as pd
 
 class main_window:
-    def __init__(_gui,baud_rate,comm_port):
+    root = Tk()
+    def __init__(_gui):
         # Main Window Parameters (not resizable)
         _gui.win_SIZE  = "1600x900"
         _gui.txt_CLR   = "white"
         _gui.bkgnd_CLR = "gray10"
+        _gui.root = main_window.root
         
+    def openCommPort(_gui,baud_rate,comm_port):
         # Comm Port Parameters
         _gui.baud_RATE = baud_rate
         _gui.comm_PORT = comm_port
         
-    def openCommPort(_gui):
+        # List Serial Comm Ports 
         if sys.platform.startswith("win"):
             _gui.ports = ["COM%s" % (i + 1) for i in range(256)]
 
@@ -40,15 +43,28 @@ class main_window:
         # CSV File that includes Predefined Presets
         _gui.presets_FILE = pd.read_excel(r'D:\Photogrammetry Table v2\Presets.xlsx',index_col= 'Presets')
         _gui.presets_NUM = _gui.presets_FILE.shape[0]  
-        _gui.preset_ID = 1
-                
-GUI = main_window(115200,"COM3")
+        _gui.preset_ID = 1            
+            
+    def openMainWindow(_gui):
+        # Opens Main GUI Window
+        _gui.root.configure(bg=_gui.bkgnd_CLR)
+        _gui.root.geometry(_gui.win_SIZE)
+        _gui.root.resizable(False, False)
+        _gui.root.title("CamScan Tool v2.0")
+            
+        _gui.root.mainloop()   
 
-        
-root = Tk()
-root.configure(bg=GUI.bkgnd_CLR)
-root.geometry(GUI.win_SIZE)
-root.resizable(False, False)
-root.title("CamScan Tool v2.0")
-    
-root.mainloop()    
+class sub_window(main_window):
+    def __init__(_sub):        
+        main_window.__init__(_sub)
+
+    def drawSubWindow(_sub,px,py):
+        _sub.sub_FRAME = Frame(_sub.root, padx=5, pady=5, borderwidth=5, relief="groove", bg=_sub.bkgnd_CLR)
+        _sub.sub_FRAME.place(x=px, y=py)
+        _sub.yaw_rotation_time_label = Label(_sub.sub_FRAME,text="Rotation Time (min:1s)",font=3,bg=_sub.bkgnd_CLR,fg=_sub.txt_CLR)         
+        _sub.yaw_rotation_time_label.grid(row=0, column=0)  
+             
+GUI = main_window()
+cont = sub_window()
+cont.drawSubWindow(50,450)
+GUI.openMainWindow()
