@@ -1,0 +1,35 @@
+{
+    "window properties":
+    {
+        "window size": "1600x900",
+        "text color": "white",
+        "background color": "gray10"
+    },
+    "settings indicies":
+    {
+        "rot speed": 0,
+        "tilt speed": 1
+    },
+    "cont mode indicies":
+    {
+        "rot_time": 0,
+        "rot_angle": 1
+    },
+    "step mode indicies":
+    {
+        "rot step angle": 0,
+        "rot rot angle": 1,
+        "tilt step angle": 2,
+        "tilt rot angle": 3,
+        "delay bet steps": 4,
+        "tilt home": 5,
+        "rot home": 6
+    },
+    "settings rbuttons indicies":
+    {
+        "front": 0,
+        "top": 1,
+        "forward": 2,
+        "backward": 3
+    }
+}

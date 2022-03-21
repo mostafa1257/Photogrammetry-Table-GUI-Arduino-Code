@@ -1,5 +1,3 @@
-from os import stat
-from sre_parse import State
 from tkinter import *
 import tkinter as tk
 import serial
@@ -11,14 +9,19 @@ import struct
 import os
 import pandas as pd
 from itertools import product
+import json
+
+presets_file_path = f'{os.getcwd()}\Presets.xlsx'
+gui_config_file = open(f'{os.getcwd()}\gui_configs.json')
+gui_config = json.load(gui_config_file)
 
 class main_window:
     root = Tk()
     def __init__(_gui):
         # Main Window Parameters (not resizable)
-        _gui.win_SIZE  = "1600x900"
-        _gui.txt_CLR   = "white"
-        _gui.bkgnd_CLR = "gray10"
+        _gui.win_SIZE  = gui_config["window properties"]["window size"]
+        _gui.txt_CLR   = gui_config["window properties"]["text color"]
+        _gui.bkgnd_CLR = gui_config["window properties"]["background color"]
         _gui.root = main_window.root
         
     def openCommPort(_gui,baud_rate,comm_port):
@@ -106,23 +109,21 @@ tilt_direction = IntVar()
 
 d = True
 
-presets_file_path = r'D:\Photogrammetry-Table-GUI-Arduino-Code\Presets.xlsx'
-
 def frontSelected():
-    SETTINGS_RBUTTONS[0].configure(fg='green4')
-    SETTINGS_RBUTTONS[1].configure(fg = 'red')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='green4')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'red')
 
 def topSelected():
-    SETTINGS_RBUTTONS[0].configure(fg='red')
-    SETTINGS_RBUTTONS[1].configure(fg = 'green4')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='red')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'green4')
 
 def fwdSelected():
-    SETTINGS_RBUTTONS[2].configure(fg='green4')
-    SETTINGS_RBUTTONS[3].configure(fg = 'red')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='green4')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'red')
 
 def bwdSelected():
-    SETTINGS_RBUTTONS[2].configure(fg='red')
-    SETTINGS_RBUTTONS[3].configure(fg = 'green4')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='red')
+    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'green4')
 
 def stepModeSelected():
     for step_entry,step_label,cont_entry,cont_label in product(
@@ -172,6 +173,7 @@ def contModeSelected():
     
 prst = presets(presets_file_path,'Presets')  
 prst_file = prst.openPresetsFile()  
+
 main = main_window()
 
 cont = sub_window()
