@@ -5,6 +5,11 @@
         "text color": "white",
         "background color": "gray10"
     },
+    "main window widgets indicies":
+    {
+        "current preset label": 0,
+        "current preset value": 1
+    },
     "settings indicies":
     {
         "rot speed": 0,
@@ -42,15 +47,20 @@
         "min_tilt_step_angle":1,
         "max_tilt_rotation_angle":90,
         "min_tilt_rotation_angle":0,
+        "max_delay_between_steps":10,
+        "mix_delay_between_steps":1,
+        "max_tilt_home":90,
+        "min_tilt_home":0,
         "max_rot_home":360,
         "min_rot_home":0,
-        "max_cont_angle":360,
-        "min_cont_angle":0,
-        "max_motor_speed":100,
-        "min_motor_speed":10,
-        "max_tilt_home":90,
+        "max_rot_speed":100,
+        "min_rot_speed":10,
+        "max_tilt_speed":100,
+        "min_tilt_speed":10,
+        "max_cont_time":360,
         "min_cont_time":1,
-        "min_delay_between_steps":1
+        "max_cont_angle":360,
+        "min_cont_angle":45        
     },
     "preset keys" : [
         "Rotation Step Angle",
@@ -83,5 +93,15 @@
         "Tilt Direction",
         "Rotation Speed (Max: 100deg/s)",
         "Tilt Speed (Max: 100deg/s)"
+    ],
+    "operation buttons": [
+        "Validate & save",
+        "Lock Tilt",
+        "Lock Rotation",
+        "Home Tilt",
+        "Home Rot",
+        "Upload & Start",
+        "       ",
+        "Connect"
     ]
 }
