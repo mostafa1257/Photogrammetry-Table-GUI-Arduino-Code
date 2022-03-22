@@ -31,5 +31,57 @@
         "top": 1,
         "forward": 2,
         "backward": 3
-    }
+    },
+    "validation":
+    {
+        "max_rot_step_angle":45,
+        "min_rot_step_angle":1,
+        "max_rot_rotation_angle":360,
+        "min_rot_rotation_angle":0,
+        "max_tilt_step_angle":45,
+        "min_tilt_step_angle":1,
+        "max_tilt_rotation_angle":90,
+        "min_tilt_rotation_angle":0,
+        "max_rot_home":360,
+        "min_rot_home":0,
+        "max_cont_angle":360,
+        "min_cont_angle":0,
+        "max_motor_speed":100,
+        "min_motor_speed":10,
+        "max_tilt_home":90,
+        "min_cont_time":1,
+        "min_delay_between_steps":1
+    },
+    "preset keys" : [
+        "Rotation Step Angle",
+        "Rotation Angle",
+        "Tilt Step Angle",
+        "Tilt Rotation Angle",
+        "Delay Between Steps",
+        "Home Rotation",
+        "Home Tilt",
+        "Rotation Speed",
+        "Tilt Speed",
+        "Rotation Time",
+        "Rotation Angle (cont)"
+    ],
+    "step mode labels": [
+        "Rotation Step Angle (Max: 45)",
+        "Rotation Angle (Max: 360)",
+        "Tilt Step Angle (Max: 45)",
+        "Tilt Rotation Angle (Max: 90)",
+        "Delay Between Steps (min:1s)",
+        "Home Tilt (-90 ~ +90)",
+        "Home Rotation (0 ~ 360)"
+    ],
+    "cont mode labels": [
+        "Rotation Time (min:1s)",
+        "Rotation Angel (max:360)"
+    ],
+    "settings labels": [
+        "Camera Position",
+        "Tilt Direction",
+        "Rotation Speed (Max: 100deg/s)",
+        "Tilt Speed (Max: 100deg/s)"
+    ]
 }

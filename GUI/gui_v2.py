@@ -2,7 +2,6 @@ from tkinter import *
 import tkinter as tk
 import serial
 import time
-from serial.tools.list_ports import comports
 import sys
 from PIL import Image, ImageTk
 import struct
@@ -17,6 +16,15 @@ gui_config = json.load(gui_config_file)
 
 class main_window:
     root = Tk()
+    
+    STEP_MODE_LABELS = []
+    STEP_MODE_ENTRIES = []
+    CONT_MODE_LABELS = []
+    CONT_MODE_ENTRIES = []
+    SETTINGS_LABELS = []
+    SETTINGS_ENTRIES = []
+    SETTINGS_RBUTTONS = []
+    
     def __init__(_gui):
         # Main Window Parameters (not resizable)
         _gui.win_SIZE  = gui_config["window properties"]["window size"]
@@ -53,17 +61,32 @@ class main_window:
             
         _gui.root.mainloop()  
 
-    def drawLabel(_lbl,parent_frame,txt,gy,gx):
+    def createLabel(_lbl,parent_frame,txt,gy,gx):
         _lbl.label = Label(parent_frame,text=txt,font=3,bg=_lbl.bkgnd_CLR,fg=_lbl.txt_CLR)         
         _lbl.label.grid(row=gy, column=gx) 
 
         return _lbl.label
 
-    def drawEntry(_ent,parent_frame,w,gy,gx):
+    def createEntry(_ent,parent_frame,w,gy,gx):
         _ent.entry = Entry(parent_frame,width=w,font=3,disabledbackground="gray50")
         _ent.entry.grid(row=gy,column=gx,padx=5,pady=10)
 
         return _ent.entry
+    
+    def createButton(_but,parent_frame,txt,fnt,w,h,fgc,bgc,bw,cmd,gy,gx,cs):
+        _but.button = Button(
+                            parent_frame,
+                            text=txt,
+                            font=fnt,
+                            fg=fgc,
+                            bg=bgc,
+                            width=w,
+                            height=h,
+                            borderwidth=bw,
+                            command=cmd)
+        _but.button.grid(row=gy,column=gx,columnspan=cs)
+        
+        return _but.button
 
     def createRadioButton(_radb,parent_frame,txt,fnt,cmd,val,var,gy,gx):
         _radb.radio_B = Radiobutton(
@@ -98,9 +121,28 @@ class presets:
         # CSV File that includes Predefined Presets
         _file.presets_FILE = pd.read_excel(_file.file_PATH,index_col=_file.idx_COLUMN)
         _file.presets_NUM = _file.presets_FILE.shape[0]  
-        _file.preset_ID = 1 
 
         return _file.presets_FILE
+    
+class table_params(main_window,presets):
+    def __init__(_tp,packet_size):
+        main_window.__init__(_tp)
+        presets.__init__(_tp,presets_file_path,"Presets")
+        _tp.pckt_SIZE = packet_size
+        _tp.preset_ID = 1
+        
+    def loadPresetData(_tp):
+        _tp.ENTRIES = [*_tp.STEP_MODE_ENTRIES,*_tp.SETTINGS_ENTRIES,*_tp.CONT_MODE_ENTRIES]
+        i = 0
+        for entry in _tp.ENTRIES:
+            entry.insert(0,_tp.openPresetsFile().iloc[_tp.preset_ID][gui_config["preset keys"][i]])
+            i += 1 
+    
+    def clearPresetData(_tp):
+        i = 0
+        for entry in _tp.ENTRIES:
+            entry.delete(0,END)  
+            i += 1        
 
 mode = IntVar()
 duplex_mode = IntVar()
@@ -109,28 +151,36 @@ tilt_direction = IntVar()
 
 d = True
 
+def cyclePresets():
+    tp.clearPresetData()
+    if tp.preset_ID >= tp.presets_NUM:
+        tp.preset_ID = 0
+    tp.loadPresetData()
+    tp.preset_ID += 1
+    print(tp.preset_ID)
+
 def frontSelected():
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='green4')
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'red')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='green4')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'red')
 
 def topSelected():
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='red')
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'green4')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='red')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'green4')
 
 def fwdSelected():
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='green4')
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'red')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='green4')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'red')
 
 def bwdSelected():
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='red')
-    SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'green4')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='red')
+    main_window.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'green4')
 
 def stepModeSelected():
     for step_entry,step_label,cont_entry,cont_label in product(
-        STEP_MODE_ENTRIES,
-        STEP_MODE_LABELS,
-        CONT_MODES_ENTRIES,
-        CONT_MODE_LABELS):
+        main_window.STEP_MODE_ENTRIES,
+        main_window.STEP_MODE_LABELS,
+        main_window.CONT_MODE_ENTRIES,
+        main_window.CONT_MODE_LABELS):
         step_entry.configure(state=NORMAL)
         step_label.configure(bg="gray10")
         cont_entry.configure(state=DISABLED)
@@ -153,10 +203,10 @@ def duplexModeSelected():
 
 def contModeSelected():
     for step_entry,step_label,cont_entry,cont_label in product(
-        STEP_MODE_ENTRIES,
-        STEP_MODE_LABELS,
-        CONT_MODES_ENTRIES,
-        CONT_MODE_LABELS):
+        main_window.STEP_MODE_ENTRIES,
+        main_window.STEP_MODE_LABELS,
+        main_window.CONT_MODE_ENTRIES,
+        main_window.CONT_MODE_LABELS):
         step_entry.configure(state=DISABLED)
         step_label.configure(bg="gray10")
         cont_entry.configure(state=NORMAL)
@@ -169,10 +219,7 @@ def contModeSelected():
     cont_sub_frame.configure(bg="gray20" )
 
     global paramBuffer
-    mode.set(0)
-    
-prst = presets(presets_file_path,'Presets')  
-prst_file = prst.openPresetsFile()  
+    mode.set(0) 
 
 main = main_window()
 
@@ -180,9 +227,11 @@ cont = sub_window()
 step = sub_window()
 config = sub_window()
 
+tp = table_params(20)
+
 """ Main Window Frame """
 # Version
-version_label = main.drawLabel(main.root,"CamScan Tool v2.0",0,0)
+version_label = main.createLabel(main.root,"CamScan Tool v2.0",0,0)
 version_label.place(x=1450,y=870)
 
 # Main Window Widgets
@@ -190,63 +239,47 @@ step_mode_enable_button = main.createRadioButton(main.root,"Step Mode",10,stepMo
 duplex_mode_enable_button = main.createRadioButton(main.root,"Rotate Step Then Tilt Step",duplexModeSelected,10,1,duplex_mode,0,0).place(x=200,y=30)
 cont_mode_enable_button = main.createRadioButton(main.root,"Continous Mode",10,contModeSelected,0,mode,0,0).place(x=50,y=410)
 
-current_preset_label = main.drawLabel(main.root,"Current Preset :",0,0).place(x=1250,y=30)
-current_preset = main.drawLabel(main.root,str(prst.preset_ID),0,0).place(x=1365,y=30)
+presets_cycle_button = main.createButton(main.root,"Presets",2,10,1,"white","bisque4",5,cyclePresets,None,None,None).place(x=1400,y=20)
+
+current_preset_label = main.createLabel(main.root,"Current Preset :",0,0).place(x=1250,y=30)
+current_preset = main.createLabel(main.root,str(tp.preset_ID),0,0).place(x=1365,y=30)
 
 """ Continious Mode Frame """
 cont_sub_frame = cont.drawSubWindow(50,450)
 # Labels
-CONT_MODE_LABELS = []
-
-CONT_MODE_LABELS.append(cont.drawLabel(cont_sub_frame,"Rotation Time (min:1s)",0,0))
-CONT_MODE_LABELS.append(cont.drawLabel(cont_sub_frame,"Rotation Angel (max:360°)",1,0))
+for i in range(len(gui_config["cont mode labels"])):
+    main_window.CONT_MODE_LABELS.append(cont.createLabel(cont_sub_frame,gui_config["cont mode labels"][i],i,0))
 
 # Entries
-CONT_MODES_ENTRIES = []
-
-CONT_MODES_ENTRIES.append(cont.drawEntry(cont_sub_frame,5,0,1))
-CONT_MODES_ENTRIES.append(cont.drawEntry(cont_sub_frame,5,1,1))
+for i in range(2):
+    main_window.CONT_MODE_ENTRIES.append(cont.createEntry(cont_sub_frame,5,i,1))
 
 """ Step Mode Frame """
 step_sub_frame = step.drawSubWindow(50,70)
 # Labels
-STEP_MODE_LABELS = []
-
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Rotation Step Angle (Max: 45°)",0,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Rotation Angle (Max: 360°)",1,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Tilt Step Angle (Max: 45°)",2,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Tilt Rotation Angle (Max: 90°)",3,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Delay Between Steps (min:1s)",4,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Home Tilt (-90°~+90)",5,0))
-STEP_MODE_LABELS.append(step.drawLabel(step_sub_frame,"Home Rotation (0°~360°)",6,0))
+for i in range(len(gui_config["step mode labels"])):
+    main_window.STEP_MODE_LABELS.append(step.createLabel(step_sub_frame,gui_config["step mode labels"][i],i,0))
 
 # Entries
-STEP_MODE_ENTRIES = []
-for i in range(0,7):
-    STEP_MODE_ENTRIES.append(step.drawEntry(step_sub_frame,5,i,1))
+for i in range(7):
+    main_window.STEP_MODE_ENTRIES.append(step.createEntry(step_sub_frame,5,i,1))
 
 """ General Settings Frame """
 config_sub_frame = config.drawSubWindow(50,570)
 # Labels
-SETTINGS_LABELS = []
-
-SETTINGS_LABELS.append(config.drawLabel(config_sub_frame,"Camera Position",0,0))
-SETTINGS_LABELS.append(config.drawLabel(config_sub_frame,"Tilt Direction",1,0))
-SETTINGS_LABELS.append(config.drawLabel(config_sub_frame,"Rotation Speed (Max: 100°/s)",2,0))
-SETTINGS_LABELS.append(config.drawLabel(config_sub_frame,"Tilt Speed (Max: 100°/s)",3,0))
+for i in range(len(gui_config["settings labels"])):
+    main_window.SETTINGS_LABELS.append(config.createLabel(config_sub_frame,gui_config["settings labels"][i],i,0))
 
 # Entries
-SETTINGS_ENTRIES = []
-
-SETTINGS_ENTRIES.append(config.drawEntry(config_sub_frame,5,2,1))
-SETTINGS_ENTRIES.append(config.drawEntry(config_sub_frame,5,3,1))
+for i in range(2,4):
+    main_window.SETTINGS_ENTRIES.append(config.createEntry(config_sub_frame,5,i,1))
 
 # Radio Buttons
-SETTINGS_RBUTTONS = []
+main_window.SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Front",10,frontSelected,2,camera_placement,0,1))
+main_window.SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Top",10,topSelected,3,camera_placement,0,2))
+main_window.SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Forward",10,fwdSelected,1,tilt_direction,1,1))
+main_window.SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Backwards",10,bwdSelected,0,tilt_direction,1,2))
 
-SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Front",10,frontSelected,2,camera_placement,0,1))
-SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Top",10,topSelected,3,camera_placement,0,2))
-SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Forward",10,fwdSelected,1,tilt_direction,1,1))
-SETTINGS_RBUTTONS.append(config.createRadioButton(config_sub_frame,"Backwards",10,bwdSelected,0,tilt_direction,1,2))
+tp.loadPresetData()
 
 main.openMainWindow()
