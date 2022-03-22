@@ -14,9 +14,17 @@ presets_file_path = f'{os.getcwd()}\Presets.xlsx'
 gui_config_file = open(f'{os.getcwd()}\gui_configs.json')
 gui_config = json.load(gui_config_file)  
 
+d = True
+
 class main_window:
     root = Tk()
     
+    mode = IntVar()
+    duplex_mode = IntVar()
+    camera_placement = IntVar()
+    tilt_direction = IntVar()
+    
+    SUB_WINDOWS = []
     MAIN_WINDOW_WIDGETS = []
     STEP_MODE_LABELS = []
     STEP_MODE_ENTRIES = []
@@ -108,7 +116,7 @@ class sub_window(main_window):
     def __init__(_sub):        
         main_window.__init__(_sub)
 
-    def drawSubWindow(_sub,px,py):
+    def createSubWindow(_sub,px,py):
         _sub.sub_FRAME = Frame(_sub.root, padx=5, pady=5, borderwidth=5, relief="groove", bg=_sub.bkgnd_CLR)
         _sub.sub_FRAME.place(x=px, y=py)  
 
@@ -152,7 +160,70 @@ class table_params(main_window,presets):
             _cp.preset_ID = 0
         _cp.loadPresetData()
         _cp.preset_ID += 1
-        _cp.MAIN_WINDOW_WIDGETS[1].configure(text=str(_cp.preset_ID))
+        _cp.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["current preset value"]].configure(text=str(_cp.preset_ID))
+        
+    def stepModeSelected(_sms):
+        for step_entry,step_label,cont_entry,cont_label in product(
+        _sms.STEP_MODE_ENTRIES,
+        _sms.STEP_MODE_LABELS,
+        _sms.CONT_MODE_ENTRIES,
+        _sms.CONT_MODE_LABELS):
+            step_entry.configure(state=NORMAL)
+            step_label.configure(bg="gray20")
+            cont_entry.configure(state=DISABLED)
+            cont_label.configure(bg="gray10")
+
+        _sms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["step mode select button"]].configure(fg="green4")
+        _sms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["cont mode select button"]].configure(fg="red")
+
+        _sms.SUB_WINDOWS[gui_config["sub window indicies"]["step mode sub window"]].configure(bg="gray20")
+        _sms.SUB_WINDOWS[gui_config["sub window indicies"]["cont mode sub window"]].configure(bg="gray10" )
+        
+        _sms.mode.set(1)
+
+    def duplexModeSelected(_dms):
+        global d
+        d = not d
+        _dms.duplex_mode.set(d)
+        if d == True:
+            _dms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["duplex mode select button"]].configure(fg="green4")
+        if d == False:
+            _dms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["duplex mode select button"]].configure(fg="red")
+
+    def contModeSelected(_cms):
+        for step_entry,step_label,cont_entry,cont_label in product(
+            _cms.STEP_MODE_ENTRIES,
+            _cms.STEP_MODE_LABELS,
+            _cms.CONT_MODE_ENTRIES,
+            _cms.CONT_MODE_LABELS):
+                step_entry.configure(state=DISABLED)
+                step_label.configure(bg="gray10")
+                cont_entry.configure(state=NORMAL)
+                cont_label.configure(bg="gray20")
+
+        _cms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["step mode select button"]].configure(fg="red")
+        _cms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["cont mode select button"]].configure(fg="green4")
+
+        _cms.SUB_WINDOWS[gui_config["sub window indicies"]["cont mode sub window"]].configure(bg="gray20")
+        _cms.SUB_WINDOWS[gui_config["sub window indicies"]["step mode sub window"]].configure(bg="gray10" )
+
+        _cms.mode.set(0) 
+        
+    def frontSelected(_fs):
+        _fs.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='green4')
+        _fs.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'red')
+
+    def topSelected(_ts):
+        _ts.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["front"]].configure(fg='red')
+        _ts.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["top"]].configure(fg = 'green4')
+
+    def fwdSelected(_fws):
+        _fws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='green4')
+        _fws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'red')
+
+    def bwdSelected(_bws):
+        _bws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='red')
+        _bws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'green4')
             
     def validate(_v):
         for i in range(len(_v.ENTRIES)):
@@ -160,3 +231,24 @@ class table_params(main_window,presets):
             min_key = (list(gui_config["validation"].keys())[2*i+1])
             assert (int(_v.ENTRIES[i].get()) <= gui_config["validation"][max_key]) and (int(_v.ENTRIES[i].get()) >= gui_config["validation"][min_key]) , "not correct"
         print("Validated")
+        
+    def lockTilt(_lt):
+        print("Lock Tilt")
+
+    def lockRot(_lr):
+        print("Lock Rot")
+        
+    def homeTilt(_ht):
+        print("Home Tilt")
+
+    def homeRot(_hr):
+        print("Home Rot")
+        
+    def upload(_up):
+        print("Uploading")
+        
+    def dummy(_d):
+        pass
+
+    def connect(_cnt):
+        print("connecting")

@@ -1,14 +1,25 @@
 {
     "window properties":
     {
-        "window size": "1600x900",
+        "window size": "1920x1000",
         "text color": "white",
         "background color": "gray10"
     },
+    "sub window indicies":
+    {
+        "step mode sub window": 0,
+        "cont mode sub window": 1,
+        "config sub window": 2,
+        "operation sub window": 3
+    },
     "main window widgets indicies":
     {
-        "current preset label": 0,
-        "current preset value": 1
+        "step mode select button": 0,
+        "duplex mode select button": 1,
+        "cont mode select button": 2,
+        "preset cycle button": 3,
+        "current preset label": 4,
+        "current preset value": 5
     },
     "settings indicies":
     {
