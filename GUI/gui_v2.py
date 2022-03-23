@@ -22,7 +22,7 @@ def updateImage():
 
     main.root.after(1000, updateImage)
 
-funcs = [tp.validate,tp.lockTilt,tp.lockRot,tp.homeTilt,tp.homeRot,tp.upload,tp.dummy,tp.connect]
+funcs = [tp.validate,tp.lockTilt,tp.lockRot,tp.homeTilt,tp.homeRot,tp.upload]
 
 """ Main Window Frame """
 # Version
@@ -91,4 +91,5 @@ for i in range(len(gui_config["operation buttons"])):
 
 tp.loadPresetData()
 main.root.after(1000, updateImage)
+main.root.after(500, tp.auto_connect)
 main.openMainWindow()

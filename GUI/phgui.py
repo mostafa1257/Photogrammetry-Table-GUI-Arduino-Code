@@ -9,6 +9,7 @@ import os
 import pandas as pd
 from itertools import product
 import json
+import serial.tools.list_ports
 
 presets_file_path = f'{os.getcwd()}\Presets.xlsx'
 gui_config_file = open(f'{os.getcwd()}\gui_configs.json')
@@ -118,6 +119,7 @@ class table_params(main_window,presets):
     def __init__(_tp,packet_size):
         main_window.__init__(_tp)
         presets.__init__(_tp,presets_file_path,"Presets")
+        
         _tp.pckt_SIZE = packet_size
         _tp.preset_ID = 1
         _tp.eof = 255
@@ -127,26 +129,22 @@ class table_params(main_window,presets):
         _tp.validated = False
         _tp.lock_TILT = True
         _tp.lock_ROT  = True
+        _tp.comm_PORT = None
 
-    def openCommPort(_ocp,baud_rate):
-        # Comm Port Parameters
-        _ocp.baud_RATE = baud_rate
-        
-        # List Serial Comm Ports 
-        if sys.platform.startswith("win"):
-            _ocp.ports = ["COM%s" % (i + 1) for i in range(256)]
-
-        _ocp.available_ports = []
-        for port in _ocp.ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                _ocp.available_ports.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        # Assume only 1 Device is connected to the Computer
-        _ocp.comm_PORT = serial.Serial(str(_ocp.available_ports[0]), baudrate=_ocp.baud_RATE, timeout=0.5)
-        
+    def openCommPort(_ocp,baud_rate):        
+        _ocp.ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
+        try:
+            _ocp.port = str(_ocp.ports[0][0])
+            print("Found 1 Device Connected")
+            if _ocp.connected == False:
+                _ocp.comm_PORT = serial.Serial(str(_ocp.ports[0][0]), baudrate=baud_rate, timeout=0.5)
+                print("opening comm port")
+                _ocp.connected = True
+        except:
+            _ocp.connected = False
+            print("Failed to find Device")
+            pass            
+                  
     def loadPresetData(_lpd):
         _lpd.ENTRIES = [*_lpd.STEP_MODE_ENTRIES,*_lpd.SETTINGS_ENTRIES,*_lpd.CONT_MODE_ENTRIES]
         i = 0
@@ -288,6 +286,6 @@ class table_params(main_window,presets):
     def dummy(_d):
         pass
 
-    def connect(_cnt):
-        _cnt.openCommPort(115200,)
-        print("connecting")
+    def auto_connect(_cnt):
+        _cnt.openCommPort(115200)
+        _cnt.root.after(2000,_cnt.auto_connect)
