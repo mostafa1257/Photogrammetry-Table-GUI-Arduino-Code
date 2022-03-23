@@ -40,27 +40,7 @@ class main_window:
         _gui.win_SIZE  = gui_config["window properties"]["window size"]
         _gui.txt_CLR   = gui_config["window properties"]["text color"]
         _gui.bkgnd_CLR = gui_config["window properties"]["background color"]
-        _gui.root = main_window.root
-        
-    def openCommPort(_gui,baud_rate,comm_port):
-        # Comm Port Parameters
-        _gui.baud_RATE = baud_rate
-        _gui.comm_PORT = comm_port
-        
-        # List Serial Comm Ports 
-        if sys.platform.startswith("win"):
-            _gui.ports = ["COM%s" % (i + 1) for i in range(256)]
-
-        _gui.available_ports = []
-        for port in _gui.ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                _gui.available_ports.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        # Assume only 1 Device is connected to the Computer
-        _gui.comm_PORT = serial.Serial(str(_gui.available_ports[0]), baudrate=_gui.baud_RATE, timeout=0.5) 
+        _gui.root = main_window.root 
             
     def openMainWindow(_gui):
         # Opens Main GUI Window
@@ -140,17 +120,43 @@ class table_params(main_window,presets):
         presets.__init__(_tp,presets_file_path,"Presets")
         _tp.pckt_SIZE = packet_size
         _tp.preset_ID = 1
+        _tp.eof = 255
+        _tp.paramBuffer = [None]*20
+        _tp.dplx = True
+        _tp.connected = False
+        _tp.validated = False
+        _tp.lock_TILT = True
+        _tp.lock_ROT  = True
+
+    def openCommPort(_ocp,baud_rate):
+        # Comm Port Parameters
+        _ocp.baud_RATE = baud_rate
         
-    def loadPresetData(_tp):
-        _tp.ENTRIES = [*_tp.STEP_MODE_ENTRIES,*_tp.SETTINGS_ENTRIES,*_tp.CONT_MODE_ENTRIES]
+        # List Serial Comm Ports 
+        if sys.platform.startswith("win"):
+            _ocp.ports = ["COM%s" % (i + 1) for i in range(256)]
+
+        _ocp.available_ports = []
+        for port in _ocp.ports:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                _ocp.available_ports.append(port)
+            except (OSError, serial.SerialException):
+                pass
+        # Assume only 1 Device is connected to the Computer
+        _ocp.comm_PORT = serial.Serial(str(_ocp.available_ports[0]), baudrate=_ocp.baud_RATE, timeout=0.5)
+        
+    def loadPresetData(_lpd):
+        _lpd.ENTRIES = [*_lpd.STEP_MODE_ENTRIES,*_lpd.SETTINGS_ENTRIES,*_lpd.CONT_MODE_ENTRIES]
         i = 0
-        for entry in _tp.ENTRIES:
-            entry.insert(0,_tp.openPresetsFile().iloc[_tp.preset_ID][gui_config["preset keys"][i]])
+        for entry in _lpd.ENTRIES:
+            entry.insert(0,_lpd.openPresetsFile().iloc[_lpd.preset_ID][gui_config["preset keys"][i]])
             i += 1 
     
-    def clearPresetData(_tp):
+    def clearPresetData(_cpd):
         i = 0
-        for entry in _tp.ENTRIES:
+        for entry in _cpd.ENTRIES:
             entry.delete(0,END)  
             i += 1
     
@@ -182,12 +188,11 @@ class table_params(main_window,presets):
         _sms.mode.set(1)
 
     def duplexModeSelected(_dms):
-        global d
-        d = not d
-        _dms.duplex_mode.set(d)
-        if d == True:
+        _dms.dplx = not _dms.dplx
+        _dms.duplex_mode.set(_dms.dplx)
+        if _dms.dplx == True:
             _dms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["duplex mode select button"]].configure(fg="green4")
-        if d == False:
+        if _dms.dplx == False:
             _dms.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["duplex mode select button"]].configure(fg="red")
 
     def contModeSelected(_cms):
@@ -224,24 +229,57 @@ class table_params(main_window,presets):
     def bwdSelected(_bws):
         _bws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["forward"]].configure(fg='red')
         _bws.SETTINGS_RBUTTONS[gui_config["settings rbuttons indicies"]["backward"]].configure(fg = 'green4')
+
+    def loadParams(_lp,pos,data):
+        _lp.paramBuffer[pos] = int(data)
+
+    def updateParamBuffer(_upb):
+        if _upb.validated:
+            _upb.loadParams(0,_upb.mode.get())
+
+            for i in range(1,len(_upb.ENTRIES)+1):
+                _upb.loadParams(i,_upb.ENTRIES[i-1].get())
             
+            _upb.loadParams(12,_upb.camera_placement.get())
+            _upb.loadParams(13,_upb.tilt_direction.get())
+            _upb.loadParams(14,_upb.duplex_mode.get())
+            _upb.loadParams(15,_upb.lock_TILT)
+            _upb.loadParams(16,_upb.lock_ROT)
+            _upb.loadParams(19,_upb.eof)
+
+            print(_upb.paramBuffer)
+        else:
+            print("Not Validated")
+
     def validate(_v):
-        for i in range(len(_v.ENTRIES)):
-            max_key = (list(gui_config["validation"].keys())[2*i])
-            min_key = (list(gui_config["validation"].keys())[2*i+1])
-            assert (int(_v.ENTRIES[i].get()) <= gui_config["validation"][max_key]) and (int(_v.ENTRIES[i].get()) >= gui_config["validation"][min_key]) , "not correct"
-        print("Validated")
+        try:
+            for i in range(len(_v.ENTRIES)):
+                max_key = (list(gui_config["validation"].keys())[2*i])
+                min_key = (list(gui_config["validation"].keys())[2*i+1])
+                assert (int(_v.ENTRIES[i].get()) <= gui_config["validation"][max_key]) and (int(_v.ENTRIES[i].get()) >= gui_config["validation"][min_key]) , "not correct"
+            _v.validated = True
+            print("Validated")
+            _v.updateParamBuffer()
+        except AssertionError as msg:
+            _v.validated = False
+            print(msg)
         
     def lockTilt(_lt):
+        _lt.lock_TILT = not _lt.lock_TILT
         print("Lock Tilt")
 
     def lockRot(_lr):
+        _lr.lock_ROT = not _lr.lock_ROT
         print("Lock Rot")
         
     def homeTilt(_ht):
+        _ht.loadParams(17,int(1))
+        _ht.loadParams(18,int(0))
         print("Home Tilt")
 
     def homeRot(_hr):
+        _hr.loadParams(17,int(0))
+        _hr.loadParams(18,int(1))
         print("Home Rot")
         
     def upload(_up):
@@ -251,4 +289,5 @@ class table_params(main_window,presets):
         pass
 
     def connect(_cnt):
+        _cnt.openCommPort(115200,)
         print("connecting")
