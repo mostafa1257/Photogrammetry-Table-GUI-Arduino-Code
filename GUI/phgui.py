@@ -135,14 +135,15 @@ class table_params(main_window,presets):
         _ocp.ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
         try:
             _ocp.port = str(_ocp.ports[0][0])
-            print("Found 1 Device Connected")
             if _ocp.connected == False:
+                _ocp.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["operation status"]].configure(text = "found 1 device")
                 _ocp.comm_PORT = serial.Serial(str(_ocp.ports[0][0]), baudrate=baud_rate, timeout=0.5)
-                print("opening comm port")
+                _ocp.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["operation status"]].configure(text ="connecting ...")
                 _ocp.connected = True
+                _ocp.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["operation status"]].configure(text = "connected",fg="green2")
         except:
             _ocp.connected = False
-            print("Failed to find Device")
+            _ocp.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["operation status"]].configure(text = "couldn't connect , retrying ...",fg="yellow")
             pass            
                   
     def loadPresetData(_lpd):
@@ -282,9 +283,6 @@ class table_params(main_window,presets):
         
     def upload(_up):
         print("Uploading")
-        
-    def dummy(_d):
-        pass
 
     def auto_connect(_cnt):
         _cnt.openCommPort(115200)

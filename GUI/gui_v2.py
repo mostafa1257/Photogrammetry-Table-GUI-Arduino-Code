@@ -47,6 +47,9 @@ main.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["current pre
 main.MAIN_WINDOW_WIDGETS.append(main.createLabel(main.root,str(tp.preset_ID),0,0))
 main.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["current preset value"]].place(x=1715,y=30)
 
+main.MAIN_WINDOW_WIDGETS.append(main.createLabel(main.root,"waiting for device",0,0))
+main.MAIN_WINDOW_WIDGETS[gui_config["main window widgets indicies"]["operation status"]].place(x=5,y=970)
+
 """ Step Mode Frame """
 main.SUB_WINDOWS.append(step.createSubWindow(50,70))
 # Labels

@@ -19,7 +19,8 @@
         "cont mode select button": 2,
         "preset cycle button": 3,
         "current preset label": 4,
-        "current preset value": 5
+        "current preset value": 5,
+        "operation status": 6
     },
     "settings indicies":
     {
